@@ -1,0 +1,87 @@
+---
+title: "assignment_1"
+author: "Daniel Kerstan"
+date: "9/30/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(RColorBrewer)
+library(rgeos)
+library(rnaturalearth)
+library(sf)
+library(spData)
+library(spDataLarge)
+library(tidyverse)
+library(tmap)
+library(spData)
+library(here)
+```
+
+
+```{r}
+#data(boston)
+
+
+data_fixed <- read_csv(here("boston_fixed.csv"))
+```
+
+
+```{r}
+
+
+
+
+#data <- spData::boston.c
+
+
+
+data <- st_as_sf(data_fixed, coords = c("LON", "LAT"), crs = 4326, agr = "constant")
+
+
+
+```
+
+```{r}
+boston <- st_read(system.file("shapes/boston_tracts.dbf", package="spData"))
+
+boston <- st_union(boston)
+```
+
+
+```{r}
+bos_region <- st_bbox(c(xmin = -71.7, xmax = -70.3,
+                        ymin = 42, ymax = 42.7),
+                      crs = st_crs(data)) %>% 
+  st_as_sfc()
+  
+
+bos_housing <- tm_shape(us_states, bbox = bos_region) +
+  tm_polygons() +
+  tm_shape(boston) +
+  tm_borders(lwd = 2) +
+  tm_layout(bg.color = "blue") +
+  tm_shape(data) +
+  tm_dots(col = "AGE", title = "Age of houses") +
+  tm_scale_bar(position = c("left", "bottom")) + 
+  tm_layout(title = "Boston Housing Data", 
+            legend.bg.color = "white", 
+            legend.position = c("right", "bottom"),
+            title.size = 2,
+            title.position = c("left", "top"),
+            legend.frame = TRUE,
+            title.bg.color = "white",
+            title.bg.alpha = .3) +
+  tm_graticules(alpha = .5) +
+  tm_compass(position = c(.9, .3)) +
+  tm_layout(frame = TRUE, frame.lwd = 5)
+
+
+bos_housing
+
+
+#tmap_mode("view")
+#bos_housing + tm_basemap(server = "OpenTopoMap", alpha = 0.7)
+```
+
