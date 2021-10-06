@@ -77,3 +77,37 @@ tm_shape(boston_fixed, bbox = boston_region) +
   tm_dots("NOX") 
 ```
 
+```{r}
+tmap::tmap_mode(mode = "view")
+tm_basemap(leaflet::providers$Stamen.Watercolor) +
+tm_shape(boston_fixed, bbox = boston_region) + tm_dots("NOX") +
+tm_tiles(paste0("http://services.arcgisonline.com/arcgis/rest/services/Canvas/",
+    "World_Light_Gray_Reference/MapServer/tile/{z}/{y}/{x}"), group = "Labels")
+```
+
+```{r}
+library(rosm) 
+
+boston_bbox = st_bbox(c(xmin = -71.154235, xmax = -70.975754,
+                      ymin = 42.303574, ymax = 42.445101),
+                    crs = st_crs(boston_fixed)) 
+boston_map <- osm.raster(boston_bbox)
+```
+
+```{r}
+tmap::tmap_mode(mode = "plot")
+
+
+tm_shape(boston_map) +
+  tm_rgb() +
+tm_shape(boston_fixed, bbox = boston_region) +
+  tm_dots("NOX", size = 0.09, palette = "RdPu", title = "NOX level", style = "quantile") +
+tm_layout(legend.outside = TRUE) +
+tm_layout("1970 Boston Housing Data")
+```
+```
+
+```{r}
+quantile(boston_fixed$NOX)
+```
+
