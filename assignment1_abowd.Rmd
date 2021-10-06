@@ -1,0 +1,79 @@
+---
+title: 'EDS Assignment 1: Cartography'
+author: "Laurel Abowd"
+date: "10/5/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(RColorBrewer)
+library(rgeos)
+library(rnaturalearth)
+library(rnaturalearthdata)
+library(sf)
+library(spData)
+library(spDataLarge)
+library(tidyverse)
+library(tmap)
+library(here)
+```
+
+
+```{r}
+# For this assignment, we will be working with the Boston dataset from the spData package.
+boston <- st_read(system.file("shapes/boston_tracts.dbf", package="spData"))
+
+boston_wgs <- boston %>% 
+  st_transform(crs = 4326)
+```
+```{r}
+ggplot() +
+  geom_sf(data = boston, geom = geometry, aes(fill = NOX))
+```
+
+```{r}
+# Try out  tmap
+
+tmap::tmap_mode(mode = "view")
+
+tm_shape(boston_wgs) +
+  tm_fill("NOX")
+
+# As seen, the Boston data from spData is spatially incorrect. We found a coder who corrected the Boston data and made it available for use. They used the specific houses as points instead of tracks.
+```
+
+```{r}
+boston_fixed <- read.csv(here("boston_fixed.csv")) %>% 
+  st_as_sf(coords = c("LON", "LAT"), crs = 4267)  # the original data was in crs NAD27
+```
+
+```{r}
+ggplot(data = boston_fixed) +
+  geom_sf(aes(color = NOX))
+```
+
+```{r}
+tmap::tmap_mode(mode = "view")
+
+tm_shape(boston_fixed) +
+  tm_dots("NOX")
+```
+
+```{r}
+# create a bbox that will go around boston, like the boston.dbf file
+boston_region = st_bbox(c(xmin = -71.52311, xmax = -70.63823,
+                      ymin = 42.00305, ymax = 42.67307),
+                    crs = st_crs(boston_fixed)) %>%
+  st_as_sfc()
+
+```
+
+```{r}
+tmap::tmap_mode(mode = "view")
+
+
+tm_shape(boston_fixed, bbox = boston_region) +
+  tm_dots("NOX") 
+```
+
