@@ -5,7 +5,7 @@ date: "10/5/2021"
 output: html_document
 ---
 
-```{r setup, include=FALSE}
+```{r setup, include=FALSE, warning= FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(RColorBrewer)
 library(rgeos)
@@ -28,6 +28,7 @@ boston_wgs <- boston %>%
   st_transform(crs = 4326)
 ```
 ```{r}
+# viewed data in ggplot
 ggplot() +
   geom_sf(data = boston, geom = geometry, aes(fill = NOX))
 ```
@@ -44,16 +45,15 @@ tm_shape(boston_wgs) +
 ```
 
 ```{r}
+# Downloaded fixed data from github 
+
 boston_fixed <- read.csv(here("boston_fixed.csv")) %>% 
   st_as_sf(coords = c("LON", "LAT"), crs = 4267)  # the original data was in crs NAD27
 ```
 
-```{r}
-ggplot(data = boston_fixed) +
-  geom_sf(aes(color = NOX))
-```
 
 ```{r}
+# Viewed data from github. Will be focusing on levels of nitrous oxide (NOX) at the housing units
 tmap::tmap_mode(mode = "view")
 
 tm_shape(boston_fixed) +
@@ -77,37 +77,42 @@ tm_shape(boston_fixed, bbox = boston_region) +
   tm_dots("NOX") 
 ```
 
-```{r}
-tmap::tmap_mode(mode = "view")
-tm_basemap(leaflet::providers$Stamen.Watercolor) +
-tm_shape(boston_fixed, bbox = boston_region) + tm_dots("NOX") +
-tm_tiles(paste0("http://services.arcgisonline.com/arcgis/rest/services/Canvas/",
-    "World_Light_Gray_Reference/MapServer/tile/{z}/{y}/{x}"), group = "Labels")
-```
 
 ```{r}
+# Used package rosm to download a tile of Boston. Found bbox coordinates online.
 library(rosm) 
 
 boston_bbox = st_bbox(c(xmin = -71.154235, xmax = -70.975754,
                       ymin = 42.303574, ymax = 42.445101),
-                    crs = st_crs(boston_fixed)) 
-boston_map <- osm.raster(boston_bbox)
+                    crs = st_crs(boston_fixed)) # used same projection as the boston fixed data
+boston_map <- osm.raster(boston_bbox) # created a open street map raster the same size as the bbox 
 ```
 
 ```{r}
+# Create static map in tmap
+
 tmap::tmap_mode(mode = "plot")
 
 
 tm_shape(boston_map) +
-  tm_rgb() +
+  tm_rgb(alpha = 0.75) +
 tm_shape(boston_fixed, bbox = boston_region) +
-  tm_dots("NOX", size = 0.09, palette = "RdPu", title = "NOX level", style = "quantile") +
-tm_layout(legend.outside = TRUE) +
-tm_layout("1970 Boston Housing Data")
-```
+  tm_dots("NOX", size = 0.1, palette = "RdPu", title = "NOX level", style = "cont") +
+tm_scale_bar(position = c("left", "bottom")) + 
+  tm_layout(title = "Boston Housing Data", 
+            legend.bg.color = "white", 
+            legend.position = c("right", "bottom"),
+            title.size = 2,
+            title.position = c("left", "top"),
+            legend.frame = TRUE,
+            title.bg.color = "white",
+            title.bg.alpha = .3) +
+  tm_graticules(alpha = .5) +
+  tm_compass(position = c(.9, .3)) +
+  tm_layout(frame = TRUE, frame.lwd = 5) 
+
+# added scale bar, compass, legend, finalized visuals and layout
 ```
 
-```{r}
-quantile(boston_fixed$NOX)
-```
-
+### This map shows the levels of nitrous oxide (NOX) pollution at housing units around Boston in 1978. This data is from the Boston housing data collected in 1978 by Harrison and Rubinfeld. The data location was corrected by GitHub user, namiyousef, and was downloaded from https://github.com/namiyousef/ai_hack_2021/blob/main/data/Boston_Housing_Market_Challenge/boston_fixed.csv
+### The basemap was downloaded from the rosm package - open street maps: Dunnington, Dewey. 2019. rosm: Plot Raster Map Tiles from Open Street Map and Other Sources. Version 0.2.5. 
